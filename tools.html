@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>AL_EMNY APP - دراسة ومهام</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+      text-align: center;
+    }
+
+    .box {
+      background-color: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin: 20px auto;
+      max-width: 500px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    #timer {
+      font-size: 3em;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+
+    #status {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    button {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      margin: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #1976D2;
+    }
+
+    #taskInput {
+      width: 70%;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    #taskList {
+      list-style: none;
+      padding: 0;
+      text-align: right;
+    }
+
+    #taskList li {
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      background-color: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .delete-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .delete-btn:hover {
+      background-color: #d32f2f;
+    }
+
+    .encouragement-message {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ✅ صندوق التايمر -->
+  <div class="box">
+    <h2>⏱️ مؤقت الدراسة</h2>
+    <div id="status">وقت الدراسة</div>
+    <div id="timer">50:00</div>
+    <button onclick="startTimer()">ابدأ</button>
+    <button onclick="stopTimer()">إيقاف</button>
+    <button onclick="resetTimer()">إعادة</button>
+  </div>
+
+  <!-- ✅ صندوق المهام -->
+  <div class="box">
+    <h2>✅ قائمة المهام</h2>
+    <input type="text" id="taskInput" placeholder="اكتب المهمة..." onkeypress="handleKeyPress(event)">
+    <button onclick="addTask()">أضف</button>
+    <ul id="taskList"></ul>
+  </div>
+
+  <!-- ✅ صوت التنبيه -->
+  <audio id="alarmSound">
+    <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
+  </audio>
+
+  <!-- ✅ رسالة التشجيع -->
+  <div id="encouragementMessage" class="encouragement-message"></div>
+
+  <script>
+    // ------------------ Timer ------------------
+    let isStudyTime = true;
+    let secondsLeft = 3000; // 50 دقيقة
+    let timerInterval = null;
+
+    const timerEl = document.getElementById("timer");
+    const statusEl = document.getElementById("status");
+    const alarmSound = document.getElementById("alarmSound");
+
+    function formatTime(sec) {
+      const min = Math.floor(sec / 60);
+      const rem = sec % 60;
+      return `${min}:${rem < 10 ? '0' : ''}${rem}`;
+    }
+
+    function updateTimerDisplay() {
+      timerEl.textContent = formatTime(secondsLeft);
+      statusEl.textContent = isStudyTime ? "وقت الدراسة" : "وقت البريك";
+    }
+
+    function startTimer() {
+      if (timerInterval) return;
+      timerInterval = setInterval(() => {
+        secondsLeft--;
+        updateTimerDisplay();
+
+        if (secondsLeft <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          alarmSound.play();
+
+          if (isStudyTime) {
+            alert("انتهى وقت الدراسة! خد بريك 10 دقايق ☕");
+            isStudyTime = false;
+            secondsLeft = 600; // 10 دقايق
+          } else {
+            alert("البريك خلص! يلا نرجع نذاكر 💪");
+            isStudyTime = true;
+            secondsLeft = 3000; // 50 دقيقة
+          }
+
+          updateTimerDisplay();
+          startTimer(); // المرحلة الجاية تلقائي
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function resetTimer() {
+      stopTimer();
+      isStudyTime = true;
+      secondsLeft = 3000;
+      updateTimerDisplay();
+    }
+
+    updateTimerDisplay();
+
+    // ------------------ To-Do List ------------------
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') addTask();
+    }
+
+    function addTask() {
+      const taskInput = document.getElementById("taskInput");
+      const text = taskInput.value.trim();
+      if (!text) return;
+
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div>
+          <input type="checkbox" onchange="completeTask(this)">
+          <span>${text}</span>
+        </div>
+        <div class="task-actions">
+          <button class="delete-btn" onclick="deleteTask(this)">حذف</button>
+        </div>
+      `;
+
+      document.getElementById("taskList").appendChild(li);
+      taskInput.value = "";
+    }
+
+    function completeTask(checkbox) {
+      const taskItem = checkbox.closest("li");
+      if (checkbox.checked) {
+        taskItem.style.opacity = "0.7";
+        taskItem.style.textDecoration = "line-through";
+        showRandomEncouragement();
+        setTimeout(() => taskItem.remove(), 2000);
+      } else {
+        taskItem.style.opacity = "1";
+        taskItem.style.textDecoration = "none";
+      }
+    }
+
+    function deleteTask(btn) {
+      btn.closest("li").remove();
+    }
+
+    const encouragementMessages = [
+      "أحسنت! استمر في التقدم 💪",
+      "عمل رائع! أنت مذهل ✨",
+      "كل مهمة تنجزها تقربك من هدفك 🎯",
+      "أنت تقوم بعمل ممتاز! 🌟",
+      "استمر هكذا! النجاح حليفك 🏆",
+      "مهمة أخرى انتهت! أنت لا تتوقف 🚀"
+    ];
+
+    function showRandomEncouragement() {
+      const box = document.getElementById("encouragementMessage");
+      const msg = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
+      box.textContent = msg;
+      box.style.display = "block";
+      setTimeout(() => box.style.display = "none", 3000);
+    }
+  </script>
+</body>
+</html>
