@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><link rel="icon" type="image/png" href="./image/logo.png" />
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>صفحة المدرّس</title>
+
+  <!-- خطوط -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0;padding:0;font-family:'Tajawal',sans-serif;background:#f7f9fc;color:#222}
+    header{background:#0077b6;color:#fff;text-align:center;padding:1rem 0}
+    main{padding:1.5rem}
+    table{width:100%;border-collapse:collapse;margin-top:1rem;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+    th,td{padding:.75rem 1rem;border:1px solid #ddd;text-align:center}
+    th{background:#90e0ef}
+    tbody tr:nth-child(odd){background:#fafafa}
+    .yes{color:#2a9d8f;font-weight:bold}
+    .no{color:#e63946;font-weight:bold}
+    #logout{margin-top:1.5rem;padding:.5rem 1.5rem;background:#e63946;color:#fff;border:none;border-radius:8px;cursor:pointer}
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <header>
+    <h1 id="page-title">قائمة طلاب المادة</h1>
+  </header>
+
+  <main>
+    <table id="students-table">
+      <thead>
+        <tr><th>الإيميل</th><th>مشترك؟</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="logout">تسجيل الخروج</button>
+  </main>
+
+  <script>
+    /* 1) إعداد Firebase */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxcQOSrEHT5HNpDP7_hbSGl4cj4yXK1ZI",
+      authDomain: "mk7t-e7a37.firebaseapp.com",
+      projectId: "mk7t-e7a37",
+      storageBucket: "mk7t-e7a37.firebasestorage.app",
+      messagingSenderId: "574578397300",
+      appId: "1:574578397300:web:fe79fccd0a01f0b8ac4121"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    /* 2) التقاط اسم المادة من URL */
+    const params  = new URLSearchParams(window.location.search);
+    const subject = params.get("subject") || "science";  // 🟥 غيّر اسم المادة الافتراضي هنا
+    document.getElementById("page-title").textContent = `قائمة طلاب مادة ${subject}`;
+
+    /* 3) تحقق من تسجيل الدخول */
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user){
+        alert("يجب تسجيل الدخول أولاً.");
+        window.location.href = "login.html"; // 🔧 غيّر اسم صفحة تسجيل الدخول لو اختلف
+        return;
+      }
+      loadStudents();
+    });
+
+    /* 4) تحميل بيانات الطلاب */
+    function loadStudents(){
+      const tbody = document.querySelector("#students-table tbody");
+      tbody.innerHTML = "";
+
+      db.collection("users") // 🔧 غيّر اسم الكوليكشن لو مختلف
+        .get()
+        .then(snapshot => {
+          if (snapshot.empty){
+            tbody.innerHTML = "<tr><td colspan='2'>لا يوجد طلاب حاليًا</td></tr>";
+            return;
+          }
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const email = data.email || doc.id;
+            const subscribed = data.subscriptions && data.subscriptions[subject] === true; // 🔧 عدّل لو هيكل الاشتراكات مختلف
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${email}</td>
+              <td class="${subscribed ? 'yes' : 'no'}">${subscribed ? '✔️' : '❌'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          alert("حصل خطأ أثناء تحميل البيانات");
+        });
+    }
+
+    /* 5) تسجيل الخروج */
+    document.getElementById("logout").onclick = () => firebase.auth().signOut();
+  </script>
+</body>
+</html>
