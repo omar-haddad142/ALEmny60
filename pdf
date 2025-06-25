@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="icon" type="image/png" href="./image/logo.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>المذكرات</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin:0; padding:2rem; font-family:'Tajawal',sans-serif; background:#f4f6f8; color:#333 }
+    h1  { text-align:center; color:#0077b6 }
+    .pdf-list { display:flex; flex-direction:column; gap:1rem; max-width:600px; margin:auto }
+    .pdf-item { background:#fff; padding:1rem 1.5rem; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center }
+    .pdf-item a { text-decoration:none; color:#0077b6; font-weight:bold }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <h1>📚 قائمة المذكرات</h1>
+  <div class="pdf-list" id="pdf-list">
+    <!-- الروابط هتظهر هنا -->
+  </div>
+
+  <script>
+    /* إعداد Firebase */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxcQOSrEHT5HNpDP7_hbSGl4cj4yXK1ZI",
+      authDomain: "mk7t-e7a37.firebaseapp.com",
+      projectId: "mk7t-e7a37",
+      storageBucket: "mk7t-e7a37.firebasestorage.app",
+      messagingSenderId: "574578397300",
+      appId: "1:574578397300:web:fe79fccd0a01f0b8ac4121"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const pdfList = document.getElementById("pdf-list");
+
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = "login.html";  // لو عايز تخليها بدون تسجيل دخول احذف الشرط ده
+        return;
+      }
+
+      /* 🟢 هنا بقي مفيش شرط اشتراك – أي حد داخل يقدر يشوف المذكرات */
+      const pdfs = [
+        { name: "مذكرة عربي ترم 1",   link: "https://example.com/ar1.pdf" },
+        { name: "مذكرة ماث ترم 1",    link: "https://example.com/math1.pdf" },
+        { name: "مذكرة علوم ترم 1",   link: "https://example.com/science1.pdf" }
+        // 🟨 ضيف مذكرات جديدة هنا بنفس الشكل
+      ];
+
+      pdfs.forEach(pdf => {
+        const div = document.createElement("div");
+        div.className = "pdf-item";
+        div.innerHTML = `<span>${pdf.name}</span><a href="${pdf.link}" target="_blank">تحميل</a>`;
+        pdfList.appendChild(div);
+      });
+    });
+  </script>
+
+</body>
+</html>
