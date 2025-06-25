@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <link rel="icon" type="image/png" href="./image/logo.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الدروس التعليمية - شرح عربي</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3f37c9;
+      --success-color: #4caf50;
+      --danger-color: #f72585;
+      --warning-color: #f9c74f;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --border-radius: 10px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      text-align: center;
+      padding: 2rem 1rem;
+      box-shadow: var(--box-shadow);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 2rem 1rem;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .video-card {
+      position: relative;
+      background: white;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--box-shadow);
+      transition: var(--transition);
+    }
+
+    .video-card.locked {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .video-card.completed::after {
+      content: "✔";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--success-color);
+      color: white;
+      font-size: 0.9rem;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lock-overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 5px 10px;
+      border-radius: var(--border-radius);
+      font-weight: bold;
+      color: var(--danger-color);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .video-title {
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+    }
+
+    .video-title .fa-video {
+      color: var(--warning-color);
+    }
+
+    .video-content iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      background: var(--dark-color);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>الدروس التعليمية</h1>
+    <p class="subtitle">شرح عربي متكامل لجميع المستويات</p>
+  </header>
+
+  <div class="container">
+    <div id="videos" class="video-grid"></div>
+  </div>
+
+  <footer>
+    <p>جميع الحقوق محفوظة &copy; 2025</p>
+  </footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- YouTube API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBqsOuXb1fSgp6uUK3U932zHf6d05kSaQ0",
+      authDomain: "alemny5.firebaseapp.com",
+      projectId: "alemny5",
+      storageBucket: "alemny5.appspot.com",
+      messagingSenderId: "870584657552",
+      appId: "1:870584657552:web:e004e4ec141f37a38dda15"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const phone = new URLSearchParams(window.location.search).get("phone");
+    const videoList = [
+      { id: "VIDEO_ID1", title: "فيديو مجاني", isFree: true },
+      { id: "VIDEO_ID2", title: "الفيديو الثاني", isFree: false },
+      { id: "VIDEO_ID3", title: "الفيديو الثالث", isFree: false },
+      { id: "VIDEO_ID4", title: "الفيديو الرابع", isFree: false }
+    ];
+
+    let studentData = null;
+
+    function renderVideos() {
+      const container = document.getElementById("videos");
+      container.innerHTML = "";
+
+      videoList.forEach(video => {
+        const isLocked = !video.isFree && !(studentData?.paid && studentData?.active);
+        const cardId = `card-${video.id}`;
+        const iframeId = `iframe-${video.id}`;
+
+        const card = document.createElement("div");
+        card.className = "video-card";
+        card.id = cardId;
+        if (isLocked) card.classList.add("locked");
+
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "video-title";
+        titleDiv.innerHTML = `<i class="fas fa-video"></i> ${video.title}`;
+        card.appendChild(titleDiv);
+
+        if (isLocked) {
+          const lock = document.createElement("div");
+          lock.className = "lock-overlay";
+          lock.innerHTML = `<i class="fas fa-lock"></i> مقفول`;
+          card.appendChild(lock);
+        } else {
+          const content = document.createElement("div");
+          content.className = "video-content";
+          content.innerHTML = `
+            <iframe id="${iframeId}" src="https://www.youtube.com/embed/${video.id}?enablejsapi=1" allowfullscreen></iframe>
+          `;
+          card.appendChild(content);
+        }
+
+        container.appendChild(card);
+      });
+
+      setTimeout(() => {
+        videoList.forEach(video => {
+          const isLocked = !video.isFree && !(studentData?.paid && studentData?.active);
+          if (!isLocked) {
+            const player = new YT.Player(`iframe-${video.id}`, {
+              events: {
+                'onStateChange': function(event) {
+                  if (event.data === YT.PlayerState.ENDED) {
+                    document.getElementById(`card-${video.id}`).classList.add("completed");
+                  }
+                }
+              }
+            });
+          }
+        });
+      }, 1000);
+    }
+
+    function fetchStudent() {
+      if (phone) {
+        db.collection("students").where("phone", "==", phone).get()
+          .then(snapshot => {
+            if (!snapshot.empty) {
+              studentData = snapshot.docs[0].data();
+            }
+            renderVideos();
+          })
+          .catch(err => {
+            console.error("Error fetching student:", err);
+            renderVideos(); // حتى لو حصل خطأ
+          });
+      } else {
+        renderVideos();
+      }
+    }
+
+    function onYouTubeIframeAPIReady() {
+      fetchStudent();
+    }
+  </script>
+
+</body>
+</html>
