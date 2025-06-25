@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <link rel="icon" type="image/png" href="./image/logo.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>إنشاء حساب</title>
+
+  <style>
+    *{box-sizing:border-box;font-family:"Tajawal",sans-serif;}
+    body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#f1f4f8;}
+    .card{width:350px;background:#fff;border-radius:16px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,.12);}
+    h2{text-align:center;margin:0 0 24px;}
+    input{width:100%;padding:12px;margin-bottom:14px;border:1px solid #ccc;border-radius:8px;}
+    button{width:100%;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;background:#2d89ef;color:#fff;}
+    .alt-link{text-align:center;margin-top:16px;}
+    .alt-link a{color:#2d89ef;text-decoration:none;}
+    #success-msg{display:none;text-align:center;}
+    #go-link{display:inline-block;margin-top:20px;padding:10px 20px;background:#2d89ef;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold;}
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+
+  <div class="card" id="signup-card">
+    <h2>إنشاء حساب</h2>
+    <input type="text" id="signup-phone" placeholder="رقم الموبايل">
+    <input type="email" id="signup-email" placeholder="البريد الإلكتروني">
+    <input type="password" id="signup-pass" placeholder="كلمة السر">
+    <input type="password" id="signup-confirm" placeholder="تأكيد كلمة السر">
+    <button id="signup-btn">إنشاء الحساب</button>
+    <div class="alt-link">عندك حساب؟ <a href="login.html">تسجيل دخول</a></div>
+  </div>
+
+  <div class="card" id="success-msg">
+    <h2>🎉 تم إنشاء حسابك بنجاح</h2>
+    <a id="go-link" href="#">ادخل الآن</a>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxcQOSrEHT5HNpDP7_hbSGl4cj4yXK1ZI",
+      authDomain: "mk7t-e7a37.firebaseapp.com",
+      projectId: "mk7t-e7a37",
+      storageBucket: "mk7t-e7a37.firebasestorage.app",
+      messagingSenderId: "574578397300",
+      appId: "1:574578397300:web:fe79fccd0a01f0b8ac4121"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const teacherAdmins = {
+      "chemistsamar39@gmail.com": "teacher-admin1.html",
+      "teacher2@gmail.com": "teacher-admin2.html",
+      "teacher3@gmail.com": "teacher-admin3.html",
+      "teacher4@gmail.com": "teacher-admin4.html",
+      "teacher5@gmail.com": "teacher-admin5.html"
+    };
+
+    const $ = selector => document.querySelector(selector);
+
+    $("#signup-btn").addEventListener("click", async () => {
+      const email = $("#signup-email").value.trim();
+      const pass = $("#signup-pass").value;
+      const confirm = $("#signup-confirm").value;
+      const phone = $("#signup-phone").value.trim();
+
+      if (!email || !pass || !confirm || !phone) {
+        alert("كل البيانات مطلوبة");
+        return;
+      }
+
+      if (pass !== confirm) {
+        alert("كلمة السر غير متطابقة");
+        return;
+      }
+
+      try {
+        await auth.createUserWithEmailAndPassword(email, pass);
+        const dest = teacherAdmins[email] || "./home.html";
+
+        $("#signup-card").style.display = "none";
+        $("#success-msg").style.display = "block";
+        $("#go-link").href = dest;
+
+      } catch (err) {
+        alert("فشل التسجيل: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
