@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>لوحة تحكم الأدمن</title>
+  <link rel="icon" type="image/png" href="./image/logo.png" />
+
+  <!-- خط Tajawal من جوجل فonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDKs (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: #f0f0f0;
+      padding: 30px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+    th {
+      background: #007bff;
+      color: #fff;
+    }
+    button {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .activate   { background-color: #28a745; color: #fff; }
+    .deactivate { background-color: #dc3545; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <h2>لوحة تحكم الأدمن - بيانات الطلاب</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>الاسم</th>
+        <th>رقم الهاتف</th>
+        <th>الحالة</th>
+        <th>تفعيل</th>
+        <th>إلغاء التفعيل</th>
+      </tr>
+    </thead>
+    <tbody id="studentsTable"></tbody>
+  </table>
+
+  <script>
+    /* --------------------------------------------------------------
+      ⚠️ هذا المفتاح غير سرّي لكنه يجب أن يكون مقيَّداً من
+      Google Cloud Console → APIs & Services → Credentials
+      Application restrictions  ➜  HTTP referrers
+      وأضف:  https://YOUR-USERNAME.github.io/*
+    -------------------------------------------------------------- */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBqsOuXb1fSgp6uUK3U932zHf6d05kSaQ0",
+      authDomain: "alemny5.firebaseapp.com",
+      projectId: "alemny5",
+      storageBucket: "alemny5.appspot.com",
+      messagingSenderId: "870584657552",
+      appId: "1:870584657552:web:e004e4ec141f37a38dda15"
+    };
+
+    try {
+      // تهيئة Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      /* تحميل بيانات الطلاب في الجدول */
+      function loadStudents() {
+        db.collection("students").get()
+          .then(snapshot => {
+            const tbody = document.getElementById("studentsTable");
+            tbody.innerHTML = "";
+
+            snapshot.forEach(doc => {
+              const student = doc.data();
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td>${student.name  || "-"}</td>
+                <td>${student.phone || "-"}</td>
+                <td>${student.paid && student.active ? "مفعّل" : "غير مفعّل"}</td>
+                <td><button class="activate"   onclick="updateStatus('${doc.id}', true)">تفعيل</button></td>
+                <td><button class="deactivate" onclick="updateStatus('${doc.id}', false)">إلغاء</button></td>
+              `;
+              tbody.appendChild(tr);
+            });
+          })
+          .catch(error => {
+            console.error("فشل في تحميل الطلاب:", error);
+            alert("مشكلة في الاتصال بقاعدة البيانات. تأكد من قيود الـ API Key أو قواعد Firestore.");
+          });
+      }
+
+      /* تحديث حالة الطالب */
+      function updateStatus(docId, activate) {
+        db.collection("students").doc(docId).update({
+          paid:   activate,
+          active: activate
+        })
+        .then(() => {
+          alert(activate ? "تم التفعيل بنجاح" : "تم إلغاء التفعيل");
+          loadStudents(); // إعادة تحميل الجدول بعد التحديث
+        })
+        .catch(err => {
+          console.error("خطأ في التحديث:", err);
+          alert("فشل التحديث. تأكد من صلاحياتك أو إعدادات الأمان في Firestore.");
+        });
+      }
+
+      window.onload = loadStudents; // حمّل البيانات عند فتح الصفحة
+
+    } catch (e) {
+      console.error("خطأ في إعداد Firebase:", e);
+      alert("فشل إعداد Firebase. راجع الـ config أو قيود المفتاح.");
+    }
+  </script>
+
+</body>
+</html>
